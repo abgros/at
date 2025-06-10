@@ -2,7 +2,7 @@
 name = "at"
 version = "0.1.0"
 edition = "2024"
-keywords = ["slice", "index", "indexing", "negative-index", "helpers", "bounds-checking", "utilities", "no-std"]
+keywords = ["slice", "indexing", "negative-index", "helpers", "utilities"]
 repository = "https://github.com/abgros/at"
 description = "Helpers for indexing slices."
 license = "MIT"

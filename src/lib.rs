@@ -61,6 +61,11 @@ fn check_index(idx: impl ToIndex, len: usize) -> Option<usize> {
 	(resolved < len).then_some(resolved)
 }
 
+#[inline(never)]
+fn panic_bounds_check(idx: impl ToIndex, len: usize) -> ! {
+	panic!("index out of bounds: the len is {len} but the index is {idx:?}")
+}
+
 #[doc(hidden)]
 pub trait At<T: Copy>: Sealed<T> {
 	fn at(&self, idx: impl ToIndex) -> T;
@@ -87,7 +92,7 @@ impl<T: Copy, U: AsRef<[T]> + Sealed<T>> At<T> for U {
 			#[cfg(feature = "unsafe-unchecked")]
 			None => unsafe { unreachable_unchecked() },
 			#[cfg(not(feature = "unsafe-unchecked"))]
-			None => panic!("index out of bounds: the len is {len} but the index is {idx:?}"),
+			None => panic_bounds_check(idx, len),
 		}
 	}
 }
@@ -118,7 +123,7 @@ impl<'a, T, U: AsRef<[T]> + Sealed<T>> RefAt<'a, T> for U {
 			#[cfg(feature = "unsafe-unchecked")]
 			None => unsafe { unreachable_unchecked() },
 			#[cfg(not(feature = "unsafe-unchecked"))]
-			None => panic!("index out of bounds: the len is {len} but the index is {idx:?}"),
+			None => panic_bounds_check(idx, len),
 		}
 	}
 }
@@ -149,7 +154,7 @@ impl<'a, T, U: AsMut<[T]> + Sealed<T>> MutAt<'a, T> for U {
 			#[cfg(feature = "unsafe-unchecked")]
 			None => unsafe { unreachable_unchecked() },
 			#[cfg(not(feature = "unsafe-unchecked"))]
-			None => panic!("index out of bounds: the len is {len} but the index is {idx:?}"),
+			None => panic_bounds_check(idx, len),
 		}
 	}
 }

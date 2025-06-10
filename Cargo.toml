@@ -1,6 +1,6 @@
 [package]
 name = "at"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 keywords = ["slice", "indexing", "negative-index", "helpers", "utilities"]
 repository = "https://github.com/abgros/at"
@@ -11,3 +11,10 @@ license = "MIT"
 
 [features]
 unsafe-unchecked = []
+
+[dev-dependencies]
+criterion = "*"
+
+[[bench]]
+name = "check_regressions"
+harness = false

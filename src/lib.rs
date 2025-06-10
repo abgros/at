@@ -61,6 +61,7 @@ fn check_index(idx: impl ToIndex, len: usize) -> Option<usize> {
 	(resolved < len).then_some(resolved)
 }
 
+#[cfg(not(feature = "unsafe-unchecked"))]
 #[inline(never)]
 fn panic_bounds_check(idx: impl ToIndex, len: usize) -> ! {
 	panic!("index out of bounds: the len is {len} but the index is {idx:?}")

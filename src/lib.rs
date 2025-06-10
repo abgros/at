@@ -1,6 +1,7 @@
 #![no_std]
 #![warn(clippy::pedantic)]
 #![deny(missing_docs)]
+#![allow(clippy::inline_always)]
 
 //! Various helpers for indexing slices.
 //! This crate provides three methods for indexing slices: `at`, `ref_at`, and `mut_at`.
@@ -40,7 +41,7 @@ mod private {
 
 use private::{Sealed, ToIndex};
 
-#[inline]
+#[inline(always)]
 fn check_index(idx: impl ToIndex, len: usize) -> Option<usize> {
 	let resolved = if let Ok(unsigned_index) = idx.try_into() {
 		unsigned_index
@@ -76,7 +77,7 @@ impl<T: Copy, U: AsRef<[T]> + Sealed<T>> At<T> for U {
 	/// assert_eq!(a.at(2), 3);
 	/// assert_eq!(a.at(-2), 2);
 	/// ```
-	#[inline]
+	#[inline(always)]
 	fn at(&self, idx: impl ToIndex) -> T {
 		let slice = self.as_ref();
 		let len = slice.len();
@@ -107,7 +108,7 @@ impl<'a, T, U: AsRef<[T]> + Sealed<T>> RefAt<'a, T> for U {
 	/// assert_eq!(a.ref_at(2), &3);
 	/// assert_eq!(a.ref_at(-2), &2);
 	/// ```
-	#[inline]
+	#[inline(always)]
 	fn ref_at(&'a self, idx: impl ToIndex) -> &'a T {
 		let slice = self.as_ref();
 		let len = slice.len();
@@ -138,7 +139,7 @@ impl<'a, T, U: AsMut<[T]> + Sealed<T>> MutAt<'a, T> for U {
 	/// assert_eq!(a.mut_at(2), &mut 3);
 	/// assert_eq!(a.mut_at(-2), &mut 2);
 	/// ```
-	#[inline]
+	#[inline(always)]
 	fn mut_at(&'a mut self, idx: impl ToIndex) -> &'a mut T {
 		let slice = self.as_mut();
 		let len = slice.len();

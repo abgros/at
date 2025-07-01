@@ -20,7 +20,7 @@
 //!
 //! # Examples
 //! ```
-//! use at::{At, RefAt, MutAt};
+//! use at::At;
 //!
 //! let mut v = vec![8, 2, 1, 0];
 //! assert_eq!(v.at(-1), 0);
@@ -32,14 +32,12 @@
 use core::hint::unreachable_unchecked;
 
 mod private {
-	pub trait Sealed<T> {}
-	impl<T, U> Sealed<T> for U where U: AsRef<[T]> {}
-
 	pub trait ToIndex: TryInto<isize> + TryInto<usize> + core::fmt::Debug + Copy {}
 	impl<T: TryInto<isize> + TryInto<usize> + core::fmt::Debug + Copy> ToIndex for T {}
 }
 
-use private::{Sealed, ToIndex};
+// Trait alias for TryInto<isize> + TryInto<usize> + core::fmt::Debug + Copy
+use private::ToIndex;
 
 #[inline(always)]
 fn check_index(idx: impl ToIndex, len: usize) -> Option<usize> {
@@ -67,12 +65,9 @@ fn panic_bounds_check(idx: impl ToIndex, len: usize) -> ! {
 	panic!("index out of bounds: the len is {len} but the index is {idx:?}")
 }
 
-#[doc(hidden)]
-pub trait At<T: Copy>: Sealed<T> {
-	fn at(&self, idx: impl ToIndex) -> T;
-}
-
-impl<T: Copy, U: AsRef<[T]> + Sealed<T>> At<T> for U {
+/// This trait provides the `at`, `ref_at`, and `mut_at` methods for slices
+/// as well as any type that can be deferenced to a slice.
+pub trait At {
 	/// Access a particular index of a `Copy` type. Panics if the index is out of bounds.
 	///
 	/// # Examples
@@ -84,7 +79,11 @@ impl<T: Copy, U: AsRef<[T]> + Sealed<T>> At<T> for U {
 	/// assert_eq!(a.at(-2), 2);
 	/// ```
 	#[inline(always)]
-	fn at(&self, idx: impl ToIndex) -> T {
+	fn at<T>(&self, idx: impl ToIndex) -> T
+	where
+		Self: AsRef<[T]>,
+		T: Copy,
+	{
 		let slice = self.as_ref();
 		let len = slice.len();
 
@@ -96,26 +95,22 @@ impl<T: Copy, U: AsRef<[T]> + Sealed<T>> At<T> for U {
 			None => panic_bounds_check(idx, len),
 		}
 	}
-}
 
-#[doc(hidden)]
-pub trait RefAt<'a, T>: Sealed<T> {
-	fn ref_at(&'a self, idx: impl ToIndex) -> &'a T;
-}
-
-impl<'a, T, U: AsRef<[T]> + Sealed<T>> RefAt<'a, T> for U {
 	/// Access a particular index by reference. Panics if the index is out of bounds.
 	///
 	/// # Examples
 	/// ```
-	/// use at::RefAt;
+	/// use at::At;
 	/// let a = [1, 2, 3];
 	///
 	/// assert_eq!(a.ref_at(2), &3);
 	/// assert_eq!(a.ref_at(-2), &2);
 	/// ```
 	#[inline(always)]
-	fn ref_at(&'a self, idx: impl ToIndex) -> &'a T {
+	fn ref_at<T>(&self, idx: impl ToIndex) -> &T
+	where
+		Self: AsRef<[T]>,
+	{
 		let slice = self.as_ref();
 		let len = slice.len();
 
@@ -127,26 +122,22 @@ impl<'a, T, U: AsRef<[T]> + Sealed<T>> RefAt<'a, T> for U {
 			None => panic_bounds_check(idx, len),
 		}
 	}
-}
 
-#[doc(hidden)]
-pub trait MutAt<'a, T>: Sealed<T> {
-	fn mut_at(&'a mut self, idx: impl ToIndex) -> &'a mut T;
-}
-
-impl<'a, T, U: AsMut<[T]> + Sealed<T>> MutAt<'a, T> for U {
 	/// Access a particular index by mutable reference. Panics if the index is out of bounds.
 	///
 	/// # Examples
 	/// ```
-	/// use at::MutAt;
+	/// use at::At;
 	/// let mut a = [1, 2, 3];
 	///
 	/// assert_eq!(a.mut_at(2), &mut 3);
 	/// assert_eq!(a.mut_at(-2), &mut 2);
 	/// ```
 	#[inline(always)]
-	fn mut_at(&'a mut self, idx: impl ToIndex) -> &'a mut T {
+	fn mut_at<T>(&mut self, idx: impl ToIndex) -> &mut T
+	where
+		Self: AsMut<[T]>,
+	{
 		let slice = self.as_mut();
 		let len = slice.len();
 
@@ -160,12 +151,14 @@ impl<'a, T, U: AsMut<[T]> + Sealed<T>> MutAt<'a, T> for U {
 	}
 }
 
+impl<T> At for T {}
+
 mod test {
 	#[cfg(test)]
-	use crate::*;
+	use crate::At;
 
 	#[test]
-	fn test_crate() {
+	fn test_positive() {
 		extern crate std;
 		use std::vec;
 

@@ -17,7 +17,7 @@ overhead when the index is known at compile time.
 
 # Examples
 ```rs
-use at::{At, RefAt, MutAt};
+use at::At;
 
 let mut v = vec![8, 2, 1, 0];
 assert_eq!(v.at(-1), 0);
